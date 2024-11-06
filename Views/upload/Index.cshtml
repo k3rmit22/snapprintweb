@@ -34,7 +34,7 @@
                     formData.append('sessionId', sessionId); // Include the session ID
 
                     // Send the file to the kiosk's API
-                    fetch('http://192.168.1.1/api/upload', { // Update this URL if necessary
+                    fetch('http://192.168.137.1/api/upload', { // Update this URL if necessary
                         method: 'POST',
                         body: formData
                     })

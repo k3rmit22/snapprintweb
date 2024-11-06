@@ -5,16 +5,26 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load configuration and logging settings from appsettings.json
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+
+
+
+// Load the upload directory from appsettings.json
+var uploadPath = builder.Configuration["FileSettings:UploadDirectory"];
+// Ensure the directory exists if uploadPath is not null or empty
+if (!string.IsNullOrEmpty(uploadPath) && !Directory.Exists(uploadPath))
+{
+    Directory.CreateDirectory(uploadPath);
+}
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-
-var uploadPath = Path.Combine("C:\\SnapPrintKiosk", "Uploads");
-if (!Directory.Exists(uploadPath))
-{
-    Directory.CreateDirectory(uploadPath);
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -23,7 +33,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/upload/error");
     app.UseHsts();
 }
 

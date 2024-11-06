@@ -1,47 +1,46 @@
 ﻿@{
     ViewData["Title"] = "File Upload";
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
+    <title>File Upload</title>
     <script>
-                let sessionId = null;
+        let sessionId = null;
 
-            // Function to extract session ID from URL
-            function getSessionId() {
-                const params = new URLSearchParams(window.location.search);
+        // Function to extract session ID from URL
+        function getSessionId() {
+            const params = new URLSearchParams(window.location.search);
             sessionId = params.get('sessionId');
         }
 
-            // Function to automatically open the file picker when the page loads
-        window.onload = function() {
+        // Function to automatically open the file picker when the page loads
+        window.onload = function () {
             getSessionId(); // Extract the session ID
             document.getElementById('fileInput').click(); // Open file picker
-            };
+        };
 
-            // Handle file selection and upload
+        // Handle file selection and upload
         function uploadFile() {
             var fileInput = document.getElementById('fileInput');
             if (fileInput.files.length > 0) {
-                    var file = fileInput.files[0];
+                var file = fileInput.files[0];
                 // Validate that the file is a PDF
                 if (file.type === 'application/pdf') {
                     var formData = new FormData();
                     formData.append('file', file);
-                        formData.append('sessionId', sessionId); // Include the session ID
+                    formData.append('sessionId', sessionId); // Include the session ID
 
                     // Send the file to the kiosk's API
-                    fetch('http://192.168.1.1/api/upload', { // Update this URL if necessary
-                            method: 'POST',
+                    fetch('http://192.168.137.1/api/upload', { // Update this URL if necessary
+                        method: 'POST',
                         body: formData
                     })
-                    .then(response => {
-                        if (response.ok) {
-                            alert('File uploaded successfully!');
+                        .then(response => {
+                            if (response.ok) {
+                                alert('File uploaded successfully!');
                             } else {
                                 alert('Failed to upload file.');
                             }
@@ -49,13 +48,13 @@
                         .catch(error => {
                             console.error('Error:', error);
                         });
-                    } else {
-                        alert('Invalid file type. Please select a PDF file.');
-                    }
                 } else {
-                    alert('No file selected. Please try again.');
+                    alert('Invalid file type. Please select a PDF file.');
                 }
+            } else {
+                alert('No file selected. Please try again.');
             }
+        }
     </script>
 </head>
 <body>
