@@ -39,7 +39,7 @@
             margin-bottom: 20px;
         }
 
-        p {
+        p{
             font-size: 10px;
             color: #333;
         }
@@ -90,7 +90,7 @@
         }
 
         /* Modal styles */
-        .error-modal, .success-modal {
+        .error-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -100,6 +100,8 @@
             background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
+            
+             align-items: center;
         }
 
         .modal-content {
@@ -108,7 +110,7 @@
             border-radius: 10px;
             width: 300px;
             text-align: center;
-            align-items: center;
+             align-items: center;
         }
 
         .close-btn {
@@ -124,22 +126,14 @@
         .close-btn:hover {
             background-color: #d32f2f;
         }
-
-        .success-btn {
-            background-color: #4CAF50; /* Success color */
-        }
-
-        .success-btn:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
 <body>
 
     <img src="@Url.Content("~/images/upload.png")" alt="Upload Icon" class="upload-icon">
     <h2>Upload your PDF file</h2>
+   
 
- 
     <form action="/api/upload/uploadfile" method="post" enctype="multipart/form-data" id="uploadForm">
         <input type="hidden" name="sessionId" value="@ViewBag.SessionId" />
         <label for="fileInput">
@@ -150,24 +144,14 @@
         <input type="file" name="file" id="fileInput" accept=".pdf" />
         
         <button type="submit">Upload</button>
+        <div class="error-message" id="errorMessage">Please upload a PDF file.</div>
     </form>
-     <div class="error-message" id="errorMessage">Please upload a PDF file.</div>
 
-
-
-    <!-- Modal for error messages -->
+    <!-- Modal for error or success messages -->
     <div id="errorModal" class="error-modal">
         <div class="modal-content">
             <p id="modalMessage"></p>
             <button class="close-btn" id="closeModalBtn">Close</button>
-        </div>
-    </div>
-
-    <!-- Modal for success messages -->
-    <div id="successModal" class="success-modal">
-        <div class="modal-content">
-            <p id="successMessage">File uploaded successfully!</p>
-            <button class="success-btn close-btn" id="closeSuccessModalBtn">Close</button>
         </div>
     </div>
 
@@ -197,8 +181,6 @@ const errorMessage = document.getElementById('errorMessage');
 const uploadForm = document.getElementById('uploadForm');
 const modalMessage = document.getElementById('modalMessage');
 const errorModal = document.getElementById('errorModal');
-const successMessage = document.getElementById('successMessage');
-const successModal = document.getElementById('successModal');
 
 fileInput.addEventListener('change', function () {
     fileName.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : "No file selected";
@@ -213,7 +195,7 @@ uploadForm.addEventListener('submit', function (event) {
 
     if (!sessionId) {
         event.preventDefault();
-        showErrorModal("USE QR CODE TO UPLOAD FILE.");
+        showErrorModal("upload succesful.");
     } else if (!file) {
         event.preventDefault();
         errorMessage.textContent = "No file selected.";
@@ -222,10 +204,6 @@ uploadForm.addEventListener('submit', function (event) {
         event.preventDefault();
         errorMessage.textContent = "Please upload a PDF file.";
         errorMessage.style.display = 'block';
-    } else {
-        event.preventDefault();
-        // Simulate a successful file upload
-        showSuccessModal("File uploaded successfully!");
     }
 });
 
@@ -235,29 +213,13 @@ function showErrorModal(message) {
     errorModal.style.display = 'flex';
 }
 
-// Function to display the modal with a custom success message
-function showSuccessModal(message) {
-    successMessage.textContent = message;
-    successModal.style.display = 'flex';
-
-     fileInput.value = ''; // Clear the file input
-    fileName.textContent = "No file selected"; // Reset the file name text
-
-    // Optionally reset other form elements, if needed
-    uploadForm.reset(); // Resets the form and clears inputs
-}
-
-// Close the error modal when the close button is clicked
+// Close the modal when the close button is clicked
 document.getElementById('closeModalBtn').onclick = function () {
     errorModal.style.display = 'none';
 }
 
-// Close the success modal when the close button is clicked
-document.getElementById('closeSuccessModalBtn').onclick = function () {
-    successModal.style.display = 'none';
-}
-
 </script>
+
 
 </body>
 </html>
