@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Threading.Tasks;
-using PdfSharpCore.Pdf.IO; // PdfSharp library for PDF page count
+using PdfSharpCore.Pdf.IO;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;// PdfSharp library for PDF page count
 using System;
+
 
 namespace snapprintweb.Controllers
 {
@@ -73,7 +76,7 @@ namespace snapprintweb.Controllers
             if ((file.ContentType != "application/pdf") && !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["ErrorMessage"] = "Please upload a valid PDF file.";
-                return RedirectToAction("UploadPage");
+                return RedirectToAction("Index");
             }
 
             // Validate file type (only PDF allowed)
@@ -107,6 +110,7 @@ namespace snapprintweb.Controllers
                 // Check PDF pages (max 10 pages)
                 using (var pdfReader = PdfReader.Open(filePath, PdfDocumentOpenMode.ReadOnly))
                 {
+
                     if (pdfReader.PageCount > 10)
                     {
                         TempData["ErrorMessage"] = "PDF file must have 10 or fewer pages.";
