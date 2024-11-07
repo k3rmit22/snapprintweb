@@ -150,7 +150,16 @@
     <!-- Modal for error or success messages -->
     <div id="errorModal" class="error-modal">
         <div class="modal-content">
-            <p id="modalMessage"></p>
+            <p id="modalMessage">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    @: @TempData["SuccessMessage"]
+                }
+                else
+                {
+                    @: @TempData["ErrorMessage"]
+                }
+            </p>
             <button class="close-btn" id="closeModalBtn">Close</button>
         </div>
     </div>
@@ -173,7 +182,20 @@ window.onload = function () {
         // Show an error message if session ID is missing
         showErrorModal("A valid session ID is required to upload a file.");
     }
+
+    // Show success message from TempData (if any)
+    const successMessage = '@TempData["SuccessMessage"]';
+    if (successMessage) {
+        showSuccessModal(successMessage);
+    }
 }
+
+// Function to display the success modal with a custom message
+function showSuccessModal(message) {
+    modalMessage.textContent = message;
+    errorModal.style.display = 'flex';
+}
+
 
 const fileInput = document.getElementById('fileInput');
 const fileName = document.getElementById('fileName');
@@ -195,7 +217,7 @@ uploadForm.addEventListener('submit', function (event) {
 
     if (!sessionId) {
         event.preventDefault();
-        showErrorModal("upload succesful.");
+        showErrorModal("valid session id require");
     } else if (!file) {
         event.preventDefault();
         errorMessage.textContent = "No file selected.";
