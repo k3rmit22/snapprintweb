@@ -20,14 +20,19 @@ namespace snapprintweb.Controllers
         [HttpGet]
         public IActionResult Index(string sessionId)
         {
+            _logger.LogInformation($"Session ID received in URL: {sessionId}");
+
             // Store sessionId in HttpContext.Session if it's provided in the URL
             if (!string.IsNullOrEmpty(sessionId))
             {
                 HttpContext.Session.SetString("SessionId", sessionId); // Store in session
+                _logger.LogInformation($"Session ID stored in session: {sessionId}");
             }
 
             // Retrieve the session ID from HttpContext.Session (if available)
             ViewBag.SessionId = HttpContext.Session.GetString("SessionId");
+
+            _logger.LogInformation($"Session ID retrieved from session: {ViewBag.SessionId}");
 
             // Display any error message from TempData
             ViewBag.ErrorMessage = TempData["ErrorMessage"] as string;
@@ -38,9 +43,11 @@ namespace snapprintweb.Controllers
             return View();
         }
 
+
+
         // Handle file upload
         [HttpPost("api/upload/uploadfile")]
-        public async Task<IActionResult> UploadFile(IFormFile file, string? sessionId)
+        public async Task<IActionResult> UploadFile(IFormFile file, string sessionId)
         {
             // Check if sessionId is provided via form, or retrieve it from the session if not provided
             if (string.IsNullOrEmpty(sessionId))
