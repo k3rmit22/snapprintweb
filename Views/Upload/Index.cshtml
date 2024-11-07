@@ -225,10 +225,9 @@ fileInput.addEventListener('change', function () {
 
 uploadForm.addEventListener('submit', function (event) {
     const file = fileInput.files[0];
-    const sessionId = getSessionIdFromURL(); // Retrieve session ID from URL
+    const sessionId = getSessionIdFromURL();
 
-    // Clear previous error message
-    errorMessage.style.display = 'none';
+    errorMessage.style.display = 'none'; // Clear previous error
 
     if (!sessionId) {
         event.preventDefault();
@@ -237,12 +236,18 @@ uploadForm.addEventListener('submit', function (event) {
         event.preventDefault();
         errorMessage.textContent = "No file selected.";
         errorMessage.style.display = 'block';
-    } else if (file.type !== "application/pdf") {  // MIME type check for PDFs
+    } else if (!file.name.toLowerCase().endsWith('.pdf')) {  // Extension check
         event.preventDefault();
         errorMessage.textContent = "Please upload a valid PDF file.";
         errorMessage.style.display = 'block';
+    } else if (file.type && file.type !== "application/pdf") {  // Optional MIME type check
+        event.preventDefault();
+        errorMessage.textContent = "Please upload a file with a valid PDF format.";
+        errorMessage.style.display = 'block';
     }
 });
+
+
 
 // Function to display the modal with a custom error message
 function showErrorModal(message) {
