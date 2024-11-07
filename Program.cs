@@ -1,3 +1,8 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,8 +35,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 // Enable session middleware
-app.UseRouting();
 app.UseSession(); // Add this line to enable session
+app.UseRouting();
+
 
 app.UseAuthorization();
 

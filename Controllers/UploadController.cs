@@ -17,32 +17,45 @@ namespace snapprintweb.Controllers
         }
 
         // Display the file upload form
-        
         [HttpGet]
         public IActionResult Index(string sessionId)
         {
+            // Store sessionId in HttpContext.Session if it's provided in the URL
             if (!string.IsNullOrEmpty(sessionId))
             {
-                HttpContext.Session.SetString("SessionId", sessionId);
+                HttpContext.Session.SetString("SessionId", sessionId); // Store in session
             }
+
+            // Retrieve the session ID from HttpContext.Session (if available)
             ViewBag.SessionId = HttpContext.Session.GetString("SessionId");
+
+            // Display any error message from TempData
             ViewBag.ErrorMessage = TempData["ErrorMessage"] as string;
+
+            // Temp data to store file path (for later use)
             ViewBag.TempFilePath = TempData["FilePath"] as string;
+
             return View();
         }
-
 
         // Handle file upload
         [HttpPost("api/upload/uploadfile")]
         public async Task<IActionResult> UploadFile(IFormFile file, string sessionId)
         {
-            // Check if sessionId is provided
+            // Check if sessionId is provided via form, or retrieve it from the session if not provided
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                sessionId = HttpContext.Session.GetString("SessionId"); // Retrieve from session
+            }
+
+            // If no sessionId found, show an error
             if (string.IsNullOrEmpty(sessionId))
             {
                 TempData["ErrorMessage"] = "Session ID is required.";
                 return RedirectToAction("Index");
             }
 
+            // If no file is uploaded, return error
             if (file == null || file.Length == 0)
             {
                 TempData["ErrorMessage"] = "No file uploaded.";
