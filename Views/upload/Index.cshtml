@@ -135,7 +135,7 @@
    
 
     <form action="/api/upload/uploadfile" method="post" enctype="multipart/form-data" id="uploadForm">
-        <input type="hidden" name="sessionId" id="sessionId">
+        <input type="hidden" name="sessionId" value="@ViewBag.SessionId" />
         <label for="fileInput">
             <span>Choose file</span>
             <div class="divider"></div> <!-- Divider line -->
@@ -195,7 +195,7 @@ uploadForm.addEventListener('submit', function (event) {
 
     if (!sessionId) {
         event.preventDefault();
-        showErrorModal("Please provide a valid session ID.");
+        showErrorModal("Please access the web by scanning qr.");
     } else if (!file) {
         event.preventDefault();
         errorMessage.textContent = "No file selected.";
