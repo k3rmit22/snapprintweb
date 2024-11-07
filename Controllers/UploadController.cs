@@ -52,7 +52,7 @@ namespace snapprintweb.Controllers
             // Check if sessionId is provided via form, or retrieve it from the session if not provided
             if (string.IsNullOrEmpty(sessionId))
             {
-                sessionId = HttpContext.Session.GetString("SessionId"); // Retrieve from session
+                sessionId = HttpContext.Session.GetString("SessionId")?? string.Empty; // Retrieve from session
             }
 
             // If no sessionId found, show an error
