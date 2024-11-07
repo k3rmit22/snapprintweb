@@ -17,7 +17,7 @@ namespace snapprintweb.Controllers
         }
 
         // Display the file upload form
-        [HttpGet]
+        
         [HttpGet]
         public IActionResult Index(string sessionId)
         {

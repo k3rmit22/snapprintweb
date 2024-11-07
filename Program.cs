@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +10,7 @@ builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout as needed
     options.Cookie.HttpOnly = true; // Make the session cookie HTTP only for security
-    options.Cookie.IsEssential = true; // Mark the session cookie as essential
+    options.Cookie.IsEssential = true; // Make the session cookie essential
 });
 
 var app = builder.Build();
@@ -32,10 +29,9 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// Enable session middleware
 app.UseRouting();
-
-// Enable session middleware - ensure this line is before `app.UseAuthorization()` and `app.MapControllerRoute()`
-app.UseSession();
+app.UseSession(); // Add this line to enable session
 
 app.UseAuthorization();
 
@@ -43,5 +39,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Upload}/{action=Index}/{id?}");
 
-// Run the application on the specified IP address and port
 app.Run("http://192.168.137.1:5082");
