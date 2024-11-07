@@ -117,6 +117,9 @@ namespace snapprintweb.Controllers
             // Store the file path in TempData (for any additional processing if needed)
             TempData["FilePath"] = filePath;
 
+            // Add success message
+            TempData["SuccessMessage"] = "File uploaded successfully!";
+
             // Redirect to the Index view
             return RedirectToAction("Index");
         }
