@@ -126,6 +126,24 @@
         .close-btn:hover {
             background-color: #d32f2f;
         }
+
+        
+        .success-btn {
+         background-color: #4CAF50; 
+         color: white; 
+         border: none;
+        padding: 10px 20px;
+        text-align: center;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px; 
+           }
+
+        
+        .success-btn:hover {
+        background-color: #45a049; 
+        }
+
     </style>
 </head>
 <body>
@@ -219,9 +237,9 @@ uploadForm.addEventListener('submit', function (event) {
         event.preventDefault();
         errorMessage.textContent = "No file selected.";
         errorMessage.style.display = 'block';
-    } else if (!file.name.endsWith('.pdf')) {
+    } else if (file.type !== "application/pdf") {  // MIME type check for PDFs
         event.preventDefault();
-        errorMessage.textContent = "Please upload a PDF file.";
+        errorMessage.textContent = "Please upload a valid PDF file.";
         errorMessage.style.display = 'block';
     }
 });
@@ -232,15 +250,19 @@ function showErrorModal(message) {
     errorModal.style.display = 'flex';
 }
 
-// Function to display success modal with a custom success message
 function showSuccessModal(message) {
     modalMessage.textContent = message;
     errorModal.style.display = 'flex';
+
+    // Apply the green style to the close button
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    closeModalBtn.classList.add('success-btn');  // Add the green style class
 }
 
-// Close the modal when the close button is clicked
+// Close the modal and reset the button style
 document.getElementById('closeModalBtn').onclick = function () {
     errorModal.style.display = 'none';
+    this.classList.remove('success-btn');  // Reset button style when closing
 }
 
 </script>
