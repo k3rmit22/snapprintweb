@@ -58,7 +58,7 @@ namespace snapprintweb.Controllers
             // If no sessionId found, show an error
             if (string.IsNullOrEmpty(sessionId))
             {
-                TempData["ErrorMessage"] = "Session ID is required.";
+                TempData["ErrorMessage"] = "USE QR CODE TO UPLOAD.";
                 return RedirectToAction("Index");
             }
 
