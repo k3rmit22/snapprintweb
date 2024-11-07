@@ -1,3 +1,5 @@
+using System.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -30,4 +32,9 @@ app.MapControllerRoute(
 
 
 // Add this line to configure the application to listen on your local IP (no SSL in offline mode).
-app.Run("http://192.168.137.1:5000"); // Specify the IP and port you want it to listen on
+app.Run("http://192.168.137.1:5082"); // Specify the IP and port you want it to listen on
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Listen(IPAddress.Parse("192.168.137.1"), 5082);  // Ensure binding to the correct IP and port
+});
