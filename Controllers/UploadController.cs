@@ -69,6 +69,13 @@ namespace snapprintweb.Controllers
                 return RedirectToAction("Index");
             }
 
+            // Server-side check for PDF MIME type
+            if (file.ContentType != "application/pdf" && !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ErrorMessage"] = "Please upload a valid PDF file.";
+                return RedirectToAction("Index");
+            }
+
             // Validate file type (only PDF allowed)
             if (Path.GetExtension(file.FileName).ToLower() != ".pdf")
             {
