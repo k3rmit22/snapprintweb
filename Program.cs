@@ -1,25 +1,4 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using System.IO;
-
 var builder = WebApplication.CreateBuilder(args);
-
-// Load configuration and logging settings from appsettings.json
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
-builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-
-
-
-// Load the upload directory from appsettings.json
-var uploadPath = builder.Configuration["FileSettings:UploadDirectory"];
-// Ensure the directory exists if uploadPath is not null or empty
-if (!string.IsNullOrEmpty(uploadPath) && !Directory.Exists(uploadPath))
-{
-    Directory.CreateDirectory(uploadPath);
-}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -44,10 +23,11 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+// This route points to the UploadController, which is the controller for file upload
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Upload}/{action=Index}/{id?}");
 
-app.Run();
 
-
+// Add this line to configure the application to listen on your local IP (no SSL in offline mode).
+app.Run("http://192.168.137.1:5000"); // Specify the IP and port you want it to listen on

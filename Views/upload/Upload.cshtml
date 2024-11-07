@@ -1,63 +1,227 @@
 ﻿@{
     ViewData["Title"] = "File Upload";
 }
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
-    <script>
-        let sessionId = null;
-
-        // Function to extract session ID from URL
-        function getSessionId() {
-            const params = new URLSearchParams(window.location.search);
-            sessionId = params.get('sessionId');
+    <title>Offline PDF Upload</title>
+    <style>
+        /* Your existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
 
-        // Function to automatically open the file picker when the page loads
-        window.onload = function () {
-            getSessionId(); // Extract the session ID
-            document.getElementById('fileInput').click(); // Open file picker
-        };
-
-        // Handle file selection and upload
-        function uploadFile() {
-            var fileInput = document.getElementById('fileInput');
-            if (fileInput.files.length > 0) {
-                var file = fileInput.files[0];
-                // Validate that the file is a PDF
-                if (file.type === 'application/pdf') {
-                    var formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('sessionId', sessionId); // Include the session ID
-
-                    // Send the file to the kiosk's API
-                    fetch('http://192.168.137.1/api/upload', { // Update this URL if necessary
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                alert('File uploaded successfully!');
-                            } else {
-                                alert('Failed to upload file.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
-                } else {
-                    alert('Invalid file type. Please select a PDF file.');
-                }
-            } else {
-                alert('No file selected. Please try again.');
-            }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
         }
-    </script>
+
+        .container img {
+            width: 80px;
+        }
+
+        h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p{
+            font-size: 10px;
+            color: #333;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        label {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .divider {
+            width: 1px;
+            height: 20px;
+            background-color: #ddd;
+            margin: 0 10px;
+        }
+
+        #fileName {
+            color: #777;
+            font-size: 14px;
+        }
+
+        button {
+            width: 80%;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Modal styles */
+        .error-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            
+             align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+             align-items: center;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            color: #fff;
+            background-color: #f44336;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .close-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
 </head>
 <body>
-    <input type="file" id="fileInput" style="display: none;" onchange="uploadFile()" accept=".pdf" />
+
+    <img src="@Url.Content("~/images/upload.png")" alt="Upload Icon" class="upload-icon">
+    <h2>Upload your PDF file</h2>
+    <p id="sessionIdDisplay"></p>
+
+    <form action="/api/upload/uploadfile" method="post" enctype="multipart/form-data" id="uploadForm">
+        <label for="fileInput">
+            <span>Choose file</span>
+            <div class="divider"></div> <!-- Divider line -->
+            <span id="fileName">No file selected</span>
+        </label>
+        <input type="file" name="file" id="fileInput" accept=".pdf" />
+        
+        <button type="submit">Upload</button>
+        <div class="error-message" id="errorMessage">Please upload a PDF file.</div>
+    </form>
+
+    <!-- Modal for error or success messages -->
+    <div id="errorModal" class="error-modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button class="close-btn" id="closeModalBtn">Close</button>
+        </div>
+    </div>
+
+<script>
+    // Function to get the sessionId from the URL query parameters
+    function getSessionIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('sessionId'); // This will retrieve the value of 'sessionId'
+    }
+
+    window.onload = function () {
+        const sessionId = getSessionIdFromURL();
+        console.log("Session ID: " + sessionId);
+
+        // If you want to display the sessionId in your HTML, you can do it like this:
+        document.getElementById('sessionIdDisplay').textContent = "Session ID: " + sessionId;
+    }
+
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const errorMessage = document.getElementById('errorMessage');
+    const uploadForm = document.getElementById('uploadForm');
+    const modalMessage = document.getElementById('modalMessage');
+    const errorModal = document.getElementById('errorModal');
+
+    fileInput.addEventListener('change', function () {
+        fileName.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : "No file selected";
+    });
+
+    uploadForm.addEventListener('submit', function (event) {
+        const file = fileInput.files[0];
+        
+        // Clear previous error message
+        errorMessage.style.display = 'none';
+
+        if (!file) {
+            event.preventDefault();
+            errorMessage.textContent = "No file selected.";
+            errorMessage.style.display = 'block';
+        } else if (!file.name.endsWith('.pdf')) {
+            event.preventDefault();
+            errorMessage.textContent = "Please upload a PDF file.";
+            errorMessage.style.display = 'block';
+        } else {
+           
+        }
+    });
+
+    // Show the modal if there's an error message
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <text>
+            modalMessage.textContent = '@ViewBag.ErrorMessage';
+            errorModal.style.display = 'flex';
+        </text>
+    }
+
+    // Show the modal for success message after file upload
+    @if (ViewBag.TempFilePath != null)
+    {
+        <text>
+            modalMessage.textContent = 'Your file was uploaded successfully.';
+            errorModal.style.display = 'flex';
+        </text>
+    }
+
+    // Close the modal when the close button is clicked
+    document.getElementById('closeModalBtn').onclick = function () {
+        errorModal.style.display = 'none';
+    }
+</script>
+
 </body>
 </html>
