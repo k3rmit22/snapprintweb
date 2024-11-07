@@ -18,13 +18,19 @@ namespace snapprintweb.Controllers
 
         // Display the file upload form
         [HttpGet]
-        public IActionResult Index()
+        [HttpGet]
+        public IActionResult Index(string sessionId)
         {
-            ViewBag.SessionId = HttpContext.Session.GetString("SessionId");  // Get session ID from session storage
+            if (!string.IsNullOrEmpty(sessionId))
+            {
+                HttpContext.Session.SetString("SessionId", sessionId);
+            }
+            ViewBag.SessionId = HttpContext.Session.GetString("SessionId");
             ViewBag.ErrorMessage = TempData["ErrorMessage"] as string;
             ViewBag.TempFilePath = TempData["FilePath"] as string;
             return View();
         }
+
 
         // Handle file upload
         [HttpPost("api/upload/uploadfile")]
