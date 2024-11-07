@@ -58,7 +58,7 @@ namespace snapprintweb.Controllers
             // If no sessionId found, show an error
             if (string.IsNullOrEmpty(sessionId))
             {
-                TempData["ErrorMessage"] = "USE QR CODE TO UPLOAD.";
+                TempData["ErrorMessage"] = "Session ID is required.";
                 return RedirectToAction("Index");
             }
 
@@ -117,8 +117,6 @@ namespace snapprintweb.Controllers
             // Store the file path in TempData (for any additional processing if needed)
             TempData["FilePath"] = filePath;
 
-            // Add success message
-            TempData["SuccessMessage"] = "File uploaded successfully!";
 
             // Redirect to the Index view
             return RedirectToAction("Index");
