@@ -165,82 +165,84 @@
     </div>
 
 <script>
-   // Function to get the sessionId from the URL query parameters
-function getSessionIdFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('sessionId'); // This retrieves the value of 'sessionId'
-}
-
-window.onload = function () {
-    const sessionId = getSessionIdFromURL();
-
-    // Display the session ID if available, otherwise show an error
-    if (sessionId) {
-        document.getElementById('sessionId').value = sessionId;  // Set the hidden input's value
-        document.getElementById('sessionIdDisplay').textContent = "Session ID: " + sessionId;
-    } else {
-        // Show an error message if session ID is missing
-        showErrorModal("A valid session ID is required to upload a file.");
+    // Function to get the sessionId from the URL query parameters
+    function getSessionIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('sessionId'); // This retrieves the value of 'sessionId'
     }
 
-    // Show success message from TempData (if any)
-    const successMessage = '@TempData["SuccessMessage"]';
-    if (successMessage) {
-        showSuccessModal(successMessage);
+    window.onload = function () {
+        const sessionId = getSessionIdFromURL();
+
+        // Display the session ID if available, otherwise show an error
+        if (sessionId) {
+            document.getElementById('sessionId').value = sessionId; // Set the hidden input's value
+            document.getElementById('sessionIdDisplay').textContent = "Session ID: " + sessionId;
+        } else {
+            // Show an error message if session ID is missing
+            showErrorModal("A valid session ID is required to upload a file.");
+        }
+
+        // Show success message from TempData (if any)
+        const successMessage = "@TempData["SuccessMessage"]";
+        if (successMessage && successMessage !== "") {
+            showSuccessModal(successMessage);
+            // Clear the file input after successful upload
+            document.getElementById('fileInput').value = ""; // Clear file selection
+            document.getElementById('fileName').textContent = "No file selected"; // Reset label
+        }
     }
-}
 
-// Function to display the success modal with a custom message
-function showSuccessModal(message) {
-    modalMessage.textContent = message;
-    errorModal.style.display = 'flex';
-}
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const errorMessage = document.getElementById('errorMessage');
+    const uploadForm = document.getElementById('uploadForm');
+    const modalMessage = document.getElementById('modalMessage');
+    const errorModal = document.getElementById('errorModal');
 
+    fileInput.addEventListener('change', function () {
+        fileName.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : "No file selected";
+    });
 
-const fileInput = document.getElementById('fileInput');
-const fileName = document.getElementById('fileName');
-const errorMessage = document.getElementById('errorMessage');
-const uploadForm = document.getElementById('uploadForm');
-const modalMessage = document.getElementById('modalMessage');
-const errorModal = document.getElementById('errorModal');
+    uploadForm.addEventListener('submit', function (event) {
+        const file = fileInput.files[0];
+        const sessionId = getSessionIdFromURL(); // Retrieve session ID from URL
 
-fileInput.addEventListener('change', function () {
-    fileName.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : "No file selected";
-});
+        // Clear previous error message
+        errorMessage.style.display = 'none';
 
-uploadForm.addEventListener('submit', function (event) {
-    const file = fileInput.files[0];
-    const sessionId = getSessionIdFromURL(); // Retrieve session ID from URL
+        if (!sessionId) {
+            event.preventDefault();
+            showErrorModal("A valid session ID is required.");
+        } else if (!file) {
+            event.preventDefault();
+            errorMessage.textContent = "No file selected.";
+            errorMessage.style.display = 'block';
+        } else if (!file.name.endsWith('.pdf')) {
+            event.preventDefault();
+            errorMessage.textContent = "Please upload a PDF file.";
+            errorMessage.style.display = 'block';
+        }
+    });
 
-    // Clear previous error message
-    errorMessage.style.display = 'none';
-
-    if (!sessionId) {
-        event.preventDefault();
-        showErrorModal("valid session id require");
-    } else if (!file) {
-        event.preventDefault();
-        errorMessage.textContent = "No file selected.";
-        errorMessage.style.display = 'block';
-    } else if (!file.name.endsWith('.pdf')) {
-        event.preventDefault();
-        errorMessage.textContent = "Please upload a PDF file.";
-        errorMessage.style.display = 'block';
+    // Function to display the modal with a custom error message
+    function showErrorModal(message) {
+        modalMessage.textContent = message;
+        errorModal.style.display = 'flex';
     }
-});
 
-// Function to display the modal with a custom error message
-function showErrorModal(message) {
-    modalMessage.textContent = message;
-    errorModal.style.display = 'flex';
-}
+    // Function to display success modal with a custom success message
+    function showSuccessModal(message) {
+        modalMessage.textContent = message;
+        errorModal.style.display = 'flex';
+    }
 
-// Close the modal when the close button is clicked
-document.getElementById('closeModalBtn').onclick = function () {
-    errorModal.style.display = 'none';
-}
-
+    // Close the modal when the close button is clicked
+    document.getElementById('closeModalBtn').onclick = function () {
+        errorModal.style.display = 'none';
+    }
 </script>
+
 
 
 </body>
