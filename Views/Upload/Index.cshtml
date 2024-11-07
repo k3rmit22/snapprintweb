@@ -139,6 +139,7 @@
     <img src="@Url.Content("~/images/upload.png")" alt="Upload Icon" class="upload-icon">
     <h2>Upload your PDF file</h2>
 
+ 
     <form action="/api/upload/uploadfile" method="post" enctype="multipart/form-data" id="uploadForm">
         <input type="hidden" name="sessionId" value="@ViewBag.SessionId" />
         <label for="fileInput">
@@ -149,8 +150,8 @@
         <input type="file" name="file" id="fileInput" accept=".pdf" />
         
         <button type="submit">Upload</button>
-        <div class="error-message" id="errorMessage">Please upload a PDF file.</div>
     </form>
+     <div class="error-message" id="errorMessage">Please upload a PDF file.</div>
 
 
 

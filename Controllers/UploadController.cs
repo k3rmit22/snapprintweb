@@ -58,6 +58,7 @@ namespace snapprintweb.Controllers
             // If no sessionId found, show an error
             if (string.IsNullOrEmpty(sessionId))
             {
+                _logger.LogWarning("No session ID provided.");
                 TempData["ErrorMessage"] = "Session ID is required.";
                 return RedirectToAction("Index");
             }
@@ -65,6 +66,8 @@ namespace snapprintweb.Controllers
             // If no file is uploaded, return error
             if (file == null || file.Length == 0)
             {
+
+                _logger.LogWarning("No file uploaded.");
                 TempData["ErrorMessage"] = "No file uploaded.";
                 return RedirectToAction("Index");
             }
@@ -72,6 +75,7 @@ namespace snapprintweb.Controllers
             // Validate file type (only PDF allowed)
             if (Path.GetExtension(file.FileName).ToLower() != ".pdf")
             {
+                _logger.LogWarning("Uploaded file is not a PDF: " + file.FileName);
                 TempData["ErrorMessage"] = "Only PDF files are allowed.";
                 return RedirectToAction("Index");
             }
@@ -83,16 +87,27 @@ namespace snapprintweb.Controllers
             if (!Directory.Exists(uploadPath))
             {
                 Directory.CreateDirectory(uploadPath);
+                _logger.LogInformation("Created uploads directory at: " + uploadPath);
             }
 
             // Construct a filename that includes the session ID for unique identification
             var fileNameWithSessionId = $"{sessionId}_{Path.GetFileName(file.FileName)}";
             var filePath = Path.Combine(uploadPath, fileNameWithSessionId);
 
-            // Save the file
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(fileStream);
+                // Save the file
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+                _logger.LogInformation("File uploaded successfully: " + filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error while saving file: " + ex.Message);
+                TempData["ErrorMessage"] = "An error occurred while uploading the file.";
+                return RedirectToAction("Index");
             }
 
             try
@@ -102,10 +117,12 @@ namespace snapprintweb.Controllers
                 {
                     if (pdfReader.PageCount > 10)
                     {
+                        _logger.LogWarning("PDF file has more than 10 pages: " + filePath);
                         TempData["ErrorMessage"] = "PDF file must have 10 or fewer pages.";
                         return RedirectToAction("Index");
                     }
                 }
+                _logger.LogInformation("PDF file page count validation passed.");
             }
             catch (Exception ex)
             {
@@ -117,7 +134,7 @@ namespace snapprintweb.Controllers
             // Store the file path in TempData (for any additional processing if needed)
             TempData["FilePath"] = filePath;
 
-
+            _logger.LogInformation("Redirecting to Index view with file path.");
             // Redirect to the Index view
             return RedirectToAction("Index");
         }
