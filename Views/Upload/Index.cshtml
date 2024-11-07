@@ -108,7 +108,7 @@
             border-radius: 10px;
             width: 300px;
             text-align: center;
-            lign-items: center;
+            align-items: center;
         }
 
         .close-btn {
@@ -230,26 +230,18 @@ uploadForm.addEventListener('submit', function (event) {
 function showErrorModal(message) {
     modalMessage.textContent = message;
     errorModal.style.display = 'flex';
-
-      // Clear the form inputs except the session ID
-    const sessionIdInput = document.querySelector('[name="sessionId"]');  // Select session ID input
-    const sessionIdValue = sessionIdInput.value;  // Get the current session ID value
-
-     // Reset the form (this clears all fields, including the file input)
-    document.querySelector('form#uploadForm').reset(); 
-
-    // Reassign the session ID back to the hidden field
-    sessionIdInput.value = sessionIdValue;
-
-    // Clear the file input field and reset file name text
-    fileInput.value = ''; // Clear the file input
-    fileName.textContent = "No file selected"; // Reset the file name text
 }
 
 // Function to display the modal with a custom success message
 function showSuccessModal(message) {
     successMessage.textContent = message;
     successModal.style.display = 'flex';
+
+     fileInput.value = ''; // Clear the file input
+    fileName.textContent = "No file selected"; // Reset the file name text
+
+    // Optionally reset other form elements, if needed
+    uploadForm.reset(); // Resets the form and clears inputs
 }
 
 // Close the error modal when the close button is clicked
