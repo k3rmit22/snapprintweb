@@ -40,7 +40,7 @@ namespace snapprintweb.Controllers
 
         // Handle file upload
         [HttpPost("api/upload/uploadfile")]
-        public async Task<IActionResult> UploadFile(IFormFile file, string sessionId)
+        public async Task<IActionResult> UploadFile(IFormFile file, string? sessionId)
         {
             // Check if sessionId is provided via form, or retrieve it from the session if not provided
             if (string.IsNullOrEmpty(sessionId))
