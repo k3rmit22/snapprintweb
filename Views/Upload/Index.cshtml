@@ -154,6 +154,7 @@
 
     <form action="/api/upload/uploadfile" method="post" enctype="multipart/form-data" id="uploadForm">
         <input type="hidden" name="sessionId" value="@ViewBag.SessionId" />
+        <span id="sessionIdDisplay"></span>
         <label for="fileInput">
             <span>Choose file</span>
             <div class="divider"></div> <!-- Divider line -->
@@ -182,7 +183,10 @@
         </div>
     </div>
 
+    <script src="~/lib/signalr.min.js"></script>
 <script>
+
+
     // Function to get the sessionId from the URL query parameters
     function getSessionIdFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -209,21 +213,23 @@
             // Show an error message if session ID is missing
             showErrorModal("A valid session ID is required to upload a file.");
         }
+    
     }
-}
+    
+    }
 
-const fileInput = document.getElementById('fileInput');
-const fileName = document.getElementById('fileName');
-const errorMessage = document.getElementById('errorMessage');
-const uploadForm = document.getElementById('uploadForm');
-const modalMessage = document.getElementById('modalMessage');
-const errorModal = document.getElementById('errorModal');
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const errorMessage = document.getElementById('errorMessage');
+    const uploadForm = document.getElementById('uploadForm');
+    const modalMessage = document.getElementById('modalMessage');
+    const errorModal = document.getElementById('errorModal');
 
-fileInput.addEventListener('change', function () {
+    fileInput.addEventListener('change', function () {
     fileName.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : "No file selected";
-});
+    });
 
-uploadForm.addEventListener('submit', function (event) {
+    uploadForm.addEventListener('submit', function (event) {
     const file = fileInput.files[0];
     const sessionId = getSessionIdFromURL();
 
@@ -245,30 +251,56 @@ uploadForm.addEventListener('submit', function (event) {
         errorMessage.textContent = "Please upload a file with a valid PDF format.";
         errorMessage.style.display = 'block';
     }
-});
+        });
 
 
 
-// Function to display the modal with a custom error message
-function showErrorModal(message) {
-    modalMessage.textContent = message;
-    errorModal.style.display = 'flex';
-}
+    // Function to display the modal with a custom error message
+    function showErrorModal(message) {
+        modalMessage.textContent = message;
+        errorModal.style.display = 'flex';
+    }
 
-function showSuccessModal(message) {
-    modalMessage.textContent = message;
-    errorModal.style.display = 'flex';
+    function showSuccessModal(message) {
+             modalMessage.textContent = message;
+         errorModal.style.display = 'flex';
 
-    // Apply the green style to the close button
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    closeModalBtn.classList.add('success-btn');  // Add the green style class
-}
+        // Apply the green style to the close button
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        closeModalBtn.classList.add('success-btn');  // Add the green style class
+    }
 
-// Close the modal and reset the button style
-document.getElementById('closeModalBtn').onclick = function () {
-    errorModal.style.display = 'none';
-    this.classList.remove('success-btn');  // Reset button style when closing
-}
+    // Close the modal and reset the button style
+    document.getElementById('closeModalBtn').onclick = function () {
+        errorModal.style.display = 'none';
+        this.classList.remove('success-btn');  // Reset button style when closing
+    }
+
+     // If you want to invoke methods on the hub:
+     function sendFileDetails(sessionId, filePath) {
+      connection.invoke("SendFileDetails", sessionId, filePath)
+       .catch(function (err) {
+        return console.error(err.toString());
+        });
+        
+     }
+
+        // Connect to SignalR Hub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/Hubs/fileUploadHub") // URL where SignalR hub is mapped
+            .configureLogging(signalR.LogLevel.Information)  // Set logging level if you need
+            .build();
+
+        connection.on("ReceiveMessage", function (message) {
+            console.log("Received message:", message);
+            // Add any custom behavior here, such as UI updates or invoking an API call
+        });
+
+        // Start the connection
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+
 
 </script>
 

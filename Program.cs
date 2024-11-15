@@ -1,3 +1,5 @@
+using snapprintweb.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,6 +13,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true; // Make the session cookie HTTP only for security
     options.Cookie.IsEssential = true; // Make the session cookie essential
 });
+
+// Add SignalR service
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -34,6 +39,8 @@ app.UseRouting();
 
 
 app.UseAuthorization();
+// Map the SignalR hub
+app.MapHub<FileUploadHub>("/Hubs/fileUploadHub");
 
 app.MapControllerRoute(
     name: "default",
