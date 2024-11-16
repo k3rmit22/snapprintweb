@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using snapprintweb.Hubs;
-using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using PdfSharpCore.Pdf.IO;
-using PdfSharpCore.Pdf;
 using Microsoft.Extensions.Logging;
-using System;
+using PdfSharpCore.Pdf.IO;
 
 namespace snapprintweb.Controllers
 {
@@ -15,6 +13,9 @@ namespace snapprintweb.Controllers
     {
         private readonly ILogger<UploadController> _logger;
         private readonly IHubContext<FileUploadHub> _hubContext;
+
+        public static Dictionary<string, (string FilePath, int PageCount, string PageSize)> FileDetailsCache =
+            new Dictionary<string, (string, int, string)>();
 
         public UploadController(ILogger<UploadController> logger, IHubContext<FileUploadHub> hubContext)
         {
@@ -49,34 +50,23 @@ namespace snapprintweb.Controllers
             return View();
         }
 
-        // Handle file upload
         [HttpPost("api/upload/uploadfile")]
         public async Task<IActionResult> UploadFile(IFormFile file, string sessionId)
         {
             if (string.IsNullOrEmpty(sessionId))
             {
-                sessionId = HttpContext.Session.GetString("SessionId") ?? string.Empty;
-            }
-
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                TempData["ErrorMessage"] = "Session ID is required.";
+                TempData["ErrorMessage"] = "Session Id is Required";
                 return RedirectToAction("Index");
             }
 
             if (file == null || file.Length == 0)
             {
-                TempData["ErrorMessage"] = "No file uploaded.";
+                TempData["ErrorMessage"] = "No file Uploaded";
                 return RedirectToAction("Index");
             }
 
-            if ((file.ContentType != "application/pdf") && !file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                TempData["ErrorMessage"] = "Please upload a valid PDF file.";
-                return RedirectToAction("Index");
-            }
-
-            if (Path.GetExtension(file.FileName).ToLower() != ".pdf")
+            // Validate file type
+            if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["ErrorMessage"] = "Only PDF files are allowed.";
                 return RedirectToAction("Index");
@@ -88,54 +78,74 @@ namespace snapprintweb.Controllers
                 Directory.CreateDirectory(uploadPath);
             }
 
-            var fileNameWithSessionId = $"{sessionId}_{Path.GetFileName(file.FileName)}";
+            var sanitizedFileName = Path.GetFileName(file.FileName);
+            var fileNameWithSessionId = $"{sessionId}_{sanitizedFileName}";
             var filePath = Path.Combine(uploadPath, fileNameWithSessionId);
 
-            // Notify clients that the file upload is starting
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", $"File upload started for session {sessionId}");
-
-            // Save the file
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                _logger.LogInformation($" uploaded file at: {filePath}");
-                await file.CopyToAsync(fileStream);
-            }
-
-            int pageCount;
-            string pageSizeType;
             try
             {
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+
+                int pageCount;
+                string pageSizeType;
+
                 using (var pdfReader = PdfReader.Open(filePath, PdfDocumentOpenMode.ReadOnly))
                 {
                     pageCount = pdfReader.PageCount;
-                    var firstPage = pdfReader.Pages[0];
-                    pageSizeType = GetPageSizeType(firstPage.Width, firstPage.Height);
 
+                    // Check if the page count exceeds 10
                     if (pageCount > 10)
                     {
+                        CleanupFile(filePath);
                         TempData["ErrorMessage"] = "PDF file must have 10 or fewer pages.";
                         return RedirectToAction("Index");
                     }
+
+                    var page = pdfReader.Pages[0];
+                    var width = page.Width;
+                    var height = page.Height;
+
+                    pageSizeType = GetPageSizeType(width, height);
                 }
+
+                // Store file details in memory
+                FileDetailsCache[sessionId] = (filePath, pageCount, pageSizeType);
+
+                await _hubContext.Clients.All.SendAsync("ReceiveMessage", $"File uploaded successfully for session {sessionId}");
+                TempData["SuccessMessage"] = "File uploaded successfully!";
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error reading PDF file: " + ex.Message);
-                TempData["ErrorMessage"] = "An error occurred while processing the PDF file.";
+                _logger.LogError(ex, "Failed to process the PDF file.");
+                CleanupFile(filePath);
+                TempData["ErrorMessage"] = "An error occurred while processing the file. Please try again.";
                 return RedirectToAction("Index");
             }
-
-            TempData["FilePath"] = filePath;
-            TempData["PageCount"] = pageCount;
-            TempData["PageSize"] = pageSizeType;
-            TempData["SuccessMessage"] = "File uploaded successfully!";
-
-            // Notify clients that the file upload is complete
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", $"File uploaded successfully for session {sessionId}");
 
             return RedirectToAction("Index");
         }
 
+        private void CleanupFile(string filePath)
+        {
+            try
+            {
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to delete file: {filePath}");
+            }
+        }
+
+
+
+        // Helper method to get the page size type
         private string GetPageSizeType(double width, double height)
         {
             const double LetterWidth = 612;
@@ -161,37 +171,26 @@ namespace snapprintweb.Controllers
         {
             if (string.IsNullOrEmpty(sessionId))
             {
-                return BadRequest("Session ID is required.");
+                TempData["ErrorMessage"] = "Session ID is required";
+                return RedirectToAction("Index");
             }
 
-            var filePath = TempData["FilePath"] as string;
-            var fileName = Path.GetFileName(filePath);
-            var pageCount = TempData["PageCount"] as int?;
-            var pageSize = TempData["PageSize"] as string;
-
-            if (filePath == null || pageCount == null || pageSize == null)
+            if (FileDetailsCache.TryGetValue(sessionId, out var details))
             {
-                return NotFound("File information not found.");
+                var fileInfo = new
+                {
+                    SessionId = sessionId,
+                    FilePath = details.FilePath,
+                    FileName = Path.GetFileName(details.FilePath),
+                    PageCount = details.PageCount,
+                    PageSize = details.PageSize
+                };
+
+                return Ok(fileInfo);
             }
 
-            var fileInfo = new
-            {
-                SessionId = sessionId,
-                FilePath = filePath,
-                FileName = fileName,
-                PageCount = pageCount,
-                PageSize = pageSize
-            };
-
-            _logger.LogInformation("File Info: {@FileInfo}", fileInfo);
-            return Ok(fileInfo);
-        }
-
-        [HttpGet("upload/error")]
-        public IActionResult Error()
-        {
-            _logger.LogError("An error occurred.");
-            return View("Error");
+            TempData["ErrorMessage"] = "File information not found";
+            return RedirectToAction("Index");
         }
     }
 }

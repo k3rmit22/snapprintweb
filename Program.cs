@@ -42,6 +42,9 @@ app.UseAuthorization();
 // Map the SignalR hub
 app.MapHub<FileUploadHub>("/Hubs/fileUploadHub");
 
+
+
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Upload}/{action=Index}/{id?}");
