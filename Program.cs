@@ -49,4 +49,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Upload}/{action=Index}/{id?}");
 
-app.Run("http://192.168.137.1:5082");
+app.Run(); 
