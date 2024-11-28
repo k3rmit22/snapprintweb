@@ -6,10 +6,10 @@ namespace snapprintweb.Hubs
 {
     public class FileUploadHub :Hub 
     {
-        public async Task SendFileDetails(string sessionId, string filePath, string fileName, string pageSize, int pageCount)
+        public async Task SendFileDetails(string sessionId, string filePath, string fileName, string pageSize, int pageCount, string colorStatus)
         {
             // Notify clients about the uploaded file details
-            await Clients.All.SendAsync("ReceiveFileDetails", sessionId, filePath,fileName, pageSize, pageCount);
+            await Clients.All.SendAsync("ReceiveFileDetails", sessionId, filePath,fileName, pageSize, pageCount, colorStatus);
         }
     }
 }

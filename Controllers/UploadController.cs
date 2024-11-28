@@ -6,6 +6,10 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PdfSharpCore.Pdf.IO;
+using PdfSharpCore.Pdf.Content.Objects;
+using iTextSharp.text.pdf;
+using snapprintweb.services;
+
 
 namespace snapprintweb.Controllers
 {
@@ -14,8 +18,8 @@ namespace snapprintweb.Controllers
         private readonly ILogger<UploadController> _logger;
         private readonly IHubContext<FileUploadHub> _hubContext;
 
-        public static Dictionary<string, (string FilePath, int PageCount, string PageSize)> FileDetailsCache =
-            new Dictionary<string, (string, int, string)>();
+        public static Dictionary<string, (string FilePath, int PageCount, string PageSize, string ColorStatus )> FileDetailsCache =
+            new Dictionary<string, (string, int, string, string)>();
 
         public UploadController(ILogger<UploadController> logger, IHubContext<FileUploadHub> hubContext)
         {
@@ -50,6 +54,11 @@ namespace snapprintweb.Controllers
             return View();
         }
 
+       
+
+
+
+
         [HttpPost("api/upload/uploadfile")]
         public async Task<IActionResult> UploadFile(IFormFile file, string sessionId)
         {
@@ -81,6 +90,7 @@ namespace snapprintweb.Controllers
             var sanitizedFileName = Path.GetFileName(file.FileName);
             var fileNameWithSessionId = $"{sessionId}_{sanitizedFileName}";
             var filePath = Path.Combine(uploadPath, fileNameWithSessionId);
+            
 
             try
             {
@@ -91,8 +101,12 @@ namespace snapprintweb.Controllers
 
                 int pageCount;
                 string pageSizeType;
+                var colorStatus = PdfColorDetection.DetectColorStatus(filePath);
 
-                using (var pdfReader = PdfReader.Open(filePath, PdfDocumentOpenMode.ReadOnly))
+
+
+
+                using (var pdfReader = PdfSharpCore.Pdf.IO.PdfReader.Open(filePath, PdfDocumentOpenMode.ReadOnly))
                 {
                     pageCount = pdfReader.PageCount;
 
@@ -109,10 +123,12 @@ namespace snapprintweb.Controllers
                     var height = page.Height;
 
                     pageSizeType = GetPageSizeType(width, height);
+                    
+
                 }
 
                 // Store file details in memory
-                FileDetailsCache[sessionId] = (filePath, pageCount, pageSizeType);
+                FileDetailsCache[sessionId] = (filePath, pageCount, pageSizeType, colorStatus);
 
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", $"File uploaded successfully for session {sessionId}");
                 TempData["SuccessMessage"] = "File uploaded successfully!";
@@ -127,6 +143,7 @@ namespace snapprintweb.Controllers
 
             return RedirectToAction("Index");
         }
+
 
         private void CleanupFile(string filePath)
         {
@@ -157,9 +174,9 @@ namespace snapprintweb.Controllers
             const double tolerance = 0.5;
 
             if (Math.Abs(width - LetterWidth) < tolerance && Math.Abs(height - LetterHeight) < tolerance)
-                return "Letter";
+                return "Letter (Short)";
             else if (Math.Abs(width - LegalWidth) < tolerance && Math.Abs(height - LegalHeight) < tolerance)
-                return "Legal";
+                return "Legal (Long)";
             else if (Math.Abs(width - A4Width) < tolerance && Math.Abs(height - A4Height) < tolerance)
                 return "A4";
             else
@@ -183,7 +200,10 @@ namespace snapprintweb.Controllers
                     FilePath = details.FilePath,
                     FileName = Path.GetFileName(details.FilePath),
                     PageCount = details.PageCount,
-                    PageSize = details.PageSize
+                    PageSize = details.PageSize,
+                    ColorStatus = details.ColorStatus
+
+
                 };
 
                 return Ok(fileInfo);
